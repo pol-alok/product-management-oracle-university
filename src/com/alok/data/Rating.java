@@ -4,7 +4,7 @@ package com.alok.data;
  * The enum Rating.
  *
  * @author - Ravikant on 16/03/2021 - 12:20
- * @project product-management-oracle-university
+ *
  */
 public enum Rating {
 

@@ -1,24 +1,39 @@
 package com.alok.data;
 
-import java.util.Random;
-
 /**
+ * The type Review.
+ *
  * @author - Ravikant on 18/03/2021 - 10:53
- * @project product-management-oracle-university
  */
 public class Review implements Comparable<Review> {
     private final Rating rating;
     private final String comments;
 
+    /**
+     * Instantiates a new Review.
+     *
+     * @param rating   the rating
+     * @param comments the comments
+     */
     public Review(Rating rating, String comments) {
         this.rating = rating;
         this.comments = comments;
     }
 
+    /**
+     * Gets rating.
+     *
+     * @return the rating
+     */
     public Rating getRating() {
         return rating;
     }
 
+    /**
+     * Gets comments.
+     *
+     * @return the comments
+     */
     public String getComments() {
         return comments;
     }

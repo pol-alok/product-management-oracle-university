@@ -7,7 +7,6 @@ import java.time.LocalDate;
  * The type Food.
  *
  * @author - Ravikant on 16/03/2021 - 22:18
- * @project product-management-oracle-university
  */
 public final class Food extends Product {
     private final LocalDate bestBefore;

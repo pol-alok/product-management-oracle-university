@@ -7,7 +7,6 @@ import java.time.LocalTime;
  * The type Drink.
  *
  * @author - Ravikant on 16/03/2021 - 22:20
- * @project product-management-oracle-university
  */
 public final class Drink extends Product {
 

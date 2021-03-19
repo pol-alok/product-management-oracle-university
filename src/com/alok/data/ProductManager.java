@@ -12,7 +12,6 @@ import java.util.*;
  * The type Product manager.
  *
  * @author - Ravikant on 16/03/2021 - 23:30
- * @project product-management-oracle-university
  */
 public class ProductManager {
 
@@ -26,6 +25,11 @@ public class ProductManager {
 //    private Review[] reviews = new Review[5];
     private final Map<Product, List<Review>> products = new HashMap<>();
 
+    /**
+     * Instantiates a new Product manager.
+     *
+     * @param locale the locale
+     */
     public ProductManager(Locale locale) {
         this.locale = locale;
         resources = ResourceBundle.getBundle("com.alok.data.resources", locale);
@@ -33,18 +37,43 @@ public class ProductManager {
         moneyFormat = NumberFormat.getCurrencyInstance(locale);
     }
 
+    /**
+     * Create product product.
+     *
+     * @param id         the id
+     * @param name       the name
+     * @param price      the price
+     * @param rating     the rating
+     * @param bestBefore the best before
+     * @return the product
+     */
     public Product createProduct(int id, String name, BigDecimal price, Rating rating, LocalDate bestBefore) {
         Product product = new Food(id, name, price, rating, bestBefore);
         products.putIfAbsent(product, new ArrayList<>());
         return product;
     }
 
+    /**
+     * Create product product.
+     *
+     * @param id     the id
+     * @param name   the name
+     * @param price  the price
+     * @param rating the rating
+     * @return the product
+     */
     public Product createProduct(int id, String name, BigDecimal price, Rating rating) {
         Product product = new Drink(id, name, price, rating);
         products.putIfAbsent(product, new ArrayList<>());
         return product;
     }
 
+    /**
+     * Find product product.
+     *
+     * @param id the id
+     * @return the product
+     */
     public Product findProduct(int id) {
         for (Product product : products.keySet())
             if (product.getId() == id)
@@ -52,10 +81,26 @@ public class ProductManager {
         return null;
     }
 
+    /**
+     * Review product product.
+     *
+     * @param id       the id
+     * @param rating   the rating
+     * @param comments the comments
+     * @return the product
+     */
     public Product reviewProduct(int id, Rating rating, String comments) {
         return reviewProduct(findProduct(id),rating,comments);
     }
 
+    /**
+     * Review product product.
+     *
+     * @param product  the product
+     * @param rating   the rating
+     * @param comments the comments
+     * @return the product
+     */
     public Product reviewProduct(Product product, Rating rating, String comments) {
         List<Review> reviews = products.get(product);
         products.remove(product);
@@ -69,10 +114,20 @@ public class ProductManager {
         return product;
     }
 
+    /**
+     * Print product report.
+     *
+     * @param id the id
+     */
     public void printProductReport(int id) {
         printProductReport(findProduct(id));
     }
 
+    /**
+     * Print product report.
+     *
+     * @param product the product
+     */
     public void printProductReport(Product product) {
         List<Review> reviews = products.get(product);
 

@@ -1,18 +1,15 @@
 package com.alok.app;
 
-import com.alok.data.Product;
 import com.alok.data.ProductManager;
 import com.alok.data.Rating;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Locale;
 
 /**
  * The type Shop.
  *
  * @author - Ravikant on 16/03/2021 - 12:15
- * @project product-management-oracle-university
  */
 public class Shop {
 
@@ -23,7 +20,7 @@ public class Shop {
      */
     public static void main(String[] args) {
 
-        ProductManager pm = new ProductManager(Locale.US);
+        ProductManager pm = new ProductManager(Locale.CHINESE);
 
         pm.createProduct(101, "Tea", BigDecimal.valueOf(1.99), Rating.NOT_RATED);
         pm.printProductReport(101);

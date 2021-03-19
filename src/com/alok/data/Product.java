@@ -11,7 +11,6 @@ import static java.math.RoundingMode.HALF_UP;
  * The type Product.
  *
  * @author - Ravikant on 16/03/2021 - 12:13
- * @project product-management-oracle-university
  */
 public abstract class Product implements Rateable<Product> {
 
@@ -23,13 +22,6 @@ public abstract class Product implements Rateable<Product> {
     private final String name;
     private final BigDecimal price;
     private final Rating rating;
-
-    /**
-     * Instantiates a new Product.
-     */
-/*    Product() {
-        this(0, "no name", BigDecimal.ZERO);
-    }*/
 
     /**
      * Instantiates a new Product.
