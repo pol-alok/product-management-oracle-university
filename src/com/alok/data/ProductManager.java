@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * The type Product manager.
@@ -15,15 +17,18 @@ import java.util.*;
  */
 public class ProductManager {
 
-    private Locale locale;
-    private ResourceBundle resources;
-    private DateTimeFormatter dateFormat;
-    private NumberFormat moneyFormat;
+    private ResourceFormatter formatter;
 
-
-    //    private Product product;
-//    private Review[] reviews = new Review[5];
     private final Map<Product, List<Review>> products = new HashMap<>();
+
+    private static final Map<String, ResourceFormatter> formatters =
+            new HashMap<String, ResourceFormatter>() {{
+                put("en-US", new ResourceFormatter(Locale.US));
+                put("fr-FR", new ResourceFormatter(Locale.FRANCE));
+                put("ru-RU", new ResourceFormatter(new Locale("ru", "RU")));
+                put("zh-TW", new ResourceFormatter(Locale.TRADITIONAL_CHINESE));
+                put("hi-IN", new ResourceFormatter(new Locale("hi", "IN")));
+            }};
 
     /**
      * Instantiates a new Product manager.
@@ -31,10 +36,34 @@ public class ProductManager {
      * @param locale the locale
      */
     public ProductManager(Locale locale) {
-        this.locale = locale;
-        resources = ResourceBundle.getBundle("com.alok.data.resources", locale);
-        dateFormat = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale);
-        moneyFormat = NumberFormat.getCurrencyInstance(locale);
+        this(locale.toLanguageTag());
+    }
+
+    /**
+     * Instantiates a new Product manager.
+     *
+     * @param langTag the lang tag
+     */
+    public ProductManager(String langTag) {
+        changeLocal(langTag);
+    }
+
+    /**
+     * Change local.
+     *
+     * @param langTag the lang tag
+     */
+    public void changeLocal(String langTag) {
+        formatter = formatters.getOrDefault(langTag, formatters.get("en-US"));
+    }
+
+    /**
+     * Supported locals set.
+     *
+     * @return the set
+     */
+    public Set<String> supportedLocals() {
+        return formatters.keySet();
     }
 
     /**
@@ -75,10 +104,12 @@ public class ProductManager {
      * @return the product
      */
     public Product findProduct(int id) {
-        for (Product product : products.keySet())
-            if (product.getId() == id)
-                return product;
-        return null;
+        return products.keySet()
+                .stream()
+                .filter(p -> p.getId() == id)
+                .findFirst()
+                .orElse(null);
+
     }
 
     /**
@@ -90,7 +121,7 @@ public class ProductManager {
      * @return the product
      */
     public Product reviewProduct(int id, Rating rating, String comments) {
-        return reviewProduct(findProduct(id),rating,comments);
+        return reviewProduct(findProduct(id), rating, comments);
     }
 
     /**
@@ -105,11 +136,17 @@ public class ProductManager {
         List<Review> reviews = products.get(product);
         products.remove(product);
         reviews.add(new Review(rating, comments));
-        int sum = 0;
-        for (Review review : reviews) {
-            sum += review.getRating().ordinal();
-        }
-        product = product.applyRating(Rateable.convert(Math.round((float) sum / reviews.size())));
+
+        product = product.applyRating(
+                Rateable.convert(
+                        (int) Math.round(
+                                reviews.stream()
+                                        .mapToInt(r -> r.getRating().ordinal())
+                                        .average()
+                                        .orElse(0)
+                        )
+                )
+        );
         products.put(product, reviews);
         return product;
     }
@@ -132,26 +169,93 @@ public class ProductManager {
         List<Review> reviews = products.get(product);
 
         StringBuilder text = new StringBuilder();
-        text.append(MessageFormat.format(resources.getString("product"),
-                product.getName(),
-                moneyFormat.format(product.getPrice()),
-                product.getRating().getStars(),
-                dateFormat.format(product.getBestBefore())));
+        text.append(formatter.formatProduct(product));
         text.append("\n");
         Collections.sort(reviews);
-        for (Review review : reviews) {
-            text.append(MessageFormat.format(resources.getString("review"),
-                    review.getRating().getStars(),
-                    review.getComments()));
-            text.append("\n");
-        }
+
         if (reviews.isEmpty()) {
-            text.append(resources.getString("no.review"));
-            text.append("\n");
+            text.append(formatter.getText("no.review")).append('\n');
+        } else {
+            text.append(
+                    reviews.stream()
+                            .map(r -> formatter.formatReview(r) + '\n')
+                            .collect(Collectors.joining())
+            );
         }
         System.out.println(text);
 
     }
 
+    /**
+     * Print products.
+     *
+     * @param filter the filter
+     * @param sorter the sorter
+     */
+    public void printProducts(Predicate<Product> filter, Comparator<Product> sorter) {
+        StringBuilder text = new StringBuilder();
+        text.append(
+                products.keySet().stream()
+                        .sorted(sorter)
+                        .filter(filter)
+                        .map(p -> formatter.formatProduct(p) + '\n')
+                        .collect(Collectors.joining())
+        );
+        System.out.println(text);
+    }
 
+    /**
+     * Gets discount.
+     *
+     * @return the discount
+     */
+    public Map<String, String> getDiscount() {
+        return products.keySet()
+                .stream()
+                .collect(
+                        Collectors.groupingBy(
+                                product -> product.getRating().getStars(),
+                                Collectors.collectingAndThen(
+                                        Collectors.summingDouble(
+                                                product -> product.getDiscount().doubleValue()
+                                        ),
+                                        discount -> formatter.moneyFormat.format(discount)
+                                )
+                        )
+                );
+    }
+
+
+
+    private static class ResourceFormatter {
+        private Locale locale;
+        private ResourceBundle resources;
+        private DateTimeFormatter dateFormat;
+        private NumberFormat moneyFormat;
+
+        private ResourceFormatter(Locale locale) {
+            this.locale = locale;
+            resources = ResourceBundle.getBundle("com.alok.data.resources", locale);
+            dateFormat = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale);
+            moneyFormat = NumberFormat.getCurrencyInstance(locale);
+        }
+
+        private String formatProduct(Product product) {
+            return MessageFormat.format(resources.getString("product"),
+                    product.getName(),
+                    moneyFormat.format(product.getPrice()),
+                    product.getRating().getStars(),
+                    dateFormat.format(product.getBestBefore()));
+        }
+
+        private String formatReview(Review review) {
+            return MessageFormat.format(resources.getString("review"),
+                    review.getRating().getStars(),
+                    review.getComments());
+        }
+
+        private String getText(String key) {
+            return resources.getString(key);
+        }
+    }
 }
